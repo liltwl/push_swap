@@ -84,16 +84,16 @@ int		ft_list(t_list  **data,char **ac)
     i = 1;
 	j = 0;
 	(*data) = (t_list*)malloc(sizeof(*tmp));
-	(*data)->i = ft_atoi(ac[i], &j);
-	(*data)->n = i;
+	(*data)->n = ft_atoi(ac[i], &j);
+	(*data)->i = i;
 	(*data)->next = NULL;
 	if (ac[i][j] != 0)
 		return (-1);
     while (ac[++i] && !(j = 0))
     {
 		tmp = (t_list*)malloc(sizeof(*tmp));
-		tmp->i = ft_atoi(ac[i], &j);
-		tmp->n = i;
+		tmp->n = ft_atoi(ac[i], &j);
+		tmp->i = i;
 		tmp->next = NULL;
 		if (ac[i][j] != 0)
 			return (-1);
@@ -109,7 +109,7 @@ void	ft_rinit(t_list *l)
 	i = 1;
 	while (l)
 	{
-		l->n = i++;
+		l->i = i++;
 		l = l->next;
 	}
 }
@@ -166,10 +166,6 @@ void	ft_push(t_list **a,t_list **b)
 		*b = tmp;
 		(*b)->next = NULL;
 	}
-	/*tmp = *b;
-	(*b) = (*b)->next;
-	tmp->next = (*a);
-	(*a) = tmp;*/
 	ft_rinit(*a);
 	ft_rinit(*b);
 }
@@ -184,9 +180,9 @@ t_list		*ft_getsmlnbr(t_list *l)
 	i = __INT_MAX__;
 	while (l)
 	{
-		if (l->i < i)
+		if (l->n < i)
 		{
-			i = l->i;
+			i = l->n;
 			tmp = l;
 		}
 		l = l->next;
@@ -202,9 +198,9 @@ t_list		*ft_getbignbr(t_list *l)
 	i = 0;
 	while (l)
 	{
-		if (l->i > i)
+		if (l->n > i)
 		{
-			i = l->i;
+			i = l->n;
 			tmp = l;
 		}
 		l = l->next;
@@ -216,18 +212,18 @@ int		ft_getibn(int n, t_list *l)
 {
 	while (l)
 	{
-		if (l->n == n)
+		if (l->i == n)
 		{
 			break ;
 		}
 		l = l->next;
 	}
-	return (l->i);
+	return (l->n);
 }
 
 int		ft_getlistlen(t_list *l)
 {
-	return (ft_lstlast(l)->n);
+	return (ft_lstlast(l)->i);
 }
 
 char		*find_oper(t_list *data, int *i, int pos, int j)
@@ -259,12 +255,12 @@ char	**ft_realloc(char **str)
 
 	len = 0;
 	if (str == NULL)
-		tmp = malloc(sizeof(char**) * 2);
+		tmp = malloc(sizeof(char **) * 2);
 	else
 	{
 		while (str[len])
 			len++;
-		tmp = malloc(sizeof(char**) * (len + 2));
+		tmp = malloc(sizeof(char **) * (len + 2));
 		len = -1;
 		while (str[++len])
 			tmp[len] = str[len];
@@ -282,7 +278,6 @@ void	save_act(t_lst *data, char *str)
 	data->str = ft_realloc(data->str);
 	while (data->str[len])
 		len++;
-	printf("%d\n", len);
 	data->str[len] = strdup(str);
 	data->str[len + 1] = NULL;
 }
@@ -317,6 +312,7 @@ void ft_sort3nbr(t_lst *data)
 	top = ft_getibn(1, data->a);
 	mid = ft_getibn(2, data->a);
 	bot = ft_getibn(3, data->a);
+	//printf("%d  ::  %d  :: %d\n",top, mid, bot);
 	if (top > mid && top < bot)
 		ft_exeac(data,"sa");
 	else if(top < mid && top < bot && bot < mid)
@@ -341,7 +337,7 @@ void	ft_sort4nbr(t_lst	*data)
 	int		i;
 	char	*str;
 
-	minpos = ft_getsmlnbr(data->a)->n;
+	minpos = ft_getsmlnbr(data->a)->i;
 	str = find_oper(data->a, &i, minpos, 1);
 	while (i--)
 		ft_exeac(data, str);
@@ -352,6 +348,48 @@ void	ft_sort4nbr(t_lst	*data)
 	//ft_exeac(a,b,"pa");
 }
 
+int		getmidpos(t_list *a, int i)
+{
+	t_list	*x;
+
+	x = a;
+	while (a && i)
+	{
+		if (x->n < a->n)
+			x = a;
+		a = a->next;
+		i--;
+	}
+	return (x->n);
+}
+
+int get_pos_closestnum(t_lst *a, int mid, int c)
+{
+
+}
+
+/******************************************/
+
+int		get_chunk_size(t_list	*a)
+{
+	if (ft_getlistlen(a) <= 50)
+		return (ft_getlistlen(a) / 2 + 1);
+	return 0;
+}
+
+void sortmored5(t_lst	*data)
+{
+	int big;
+	int	a;
+	int e;
+
+	big	= getmidpos(data->a, get_chunk_size(data->a));
+	while (ft_getlistlen(data->a) >= 2)
+	{
+		
+	}
+}
+
 int		pushswap(char  **ac)
 {
 	t_lst	data;
@@ -360,19 +398,21 @@ int		pushswap(char  **ac)
 	data.b = NULL;
 	data.str = NULL;
 	if (ft_list(&data.a, ac) < 0)
-		printf("error\n");
+		perror("error :");
 	len = ft_getlistlen(data.a);
 	if (len == 3)
 		ft_sort3nbr(&data);
-	else
+	else if (len == 4)
 		ft_sort4nbr(&data);
+	else
+		sortmored5(&data);
 	while (data.a)
 	{
 		printf("%d  ::  %d\n",data.a->n, data.a->i);
 		data.a = data.a->next;
 	}
 	len = 0;
-	while (data.str[len] != NULL)
+	while (data.str)
 		printf("%s\n", data.str[len++]);
 	return 0;
 }
@@ -386,8 +426,8 @@ int main(int av,char **ac)
 
     if (av < 2)
         return 1;
-    if (ft_list(&data, ac) < 0)
-		printf("error\n");
+    /*if (ft_list(&data, ac) < 0)
+		printf("error\n");*/
 	//ft_swap(&data);
 	//ft_rr(&data);
 	//ft_rotate(&data);
