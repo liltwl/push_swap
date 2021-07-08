@@ -226,23 +226,28 @@ int		ft_getlistlen(t_list *l)
 	return (ft_lstlast(l)->i);
 }
 
-char		*find_oper(t_list *data, int *i, int pos, int j)
+char		*find_oper(t_list *data, int *i, int pos, int y)
 {
 	int len;
 	int	x;
 
-	if (j == 1)
-		len = ft_getlistlen(data);
+	len = ft_getlistlen(data);
 	x = pos - (len / 2);
 	if (x <= 0)
 	{
 		*i = pos - 1;
-		return strdup("ra");
+		if (y == 1)
+			return strdup("ra");
+		else
+			return strdup("rb");
 	}
 	else if (x > 0)
 	{
 		*i = len - pos + 1;
-		return strdup("rra");
+		if (y == 1)
+			return strdup("rra");
+		else
+			return strdup("rrb");
 	}
 	return NULL;
 }
@@ -303,6 +308,17 @@ void	ft_exeac(t_lst *data, char *str)
 	save_act(data, str);
 }
 
+void ft_sort2nbr(t_lst *data)
+{
+	int		top;
+	int		mid;
+
+	top = ft_getibn(1, data->a);
+	mid = ft_getibn(2, data->a);
+	if (top >= mid)
+		ft_exeac(data,"sa");
+}
+
 void ft_sort3nbr(t_lst *data)
 {
 	int		top;
@@ -312,7 +328,6 @@ void ft_sort3nbr(t_lst *data)
 	top = ft_getibn(1, data->a);
 	mid = ft_getibn(2, data->a);
 	bot = ft_getibn(3, data->a);
-	//printf("%d  ::  %d  :: %d\n",top, mid, bot);
 	if (top > mid && top < bot)
 		ft_exeac(data,"sa");
 	else if(top < mid && top < bot && bot < mid)
@@ -341,13 +356,21 @@ void	ft_sort4nbr(t_lst	*data)
 	str = find_oper(data->a, &i, minpos, 1);
 	while (i--)
 		ft_exeac(data, str);
+	free (str);
 	free(str);
 	ft_exeac(data, "pa");
 	ft_sort3nbr(data);
 	ft_exeac(data, "pb");
-	//ft_exeac(a,b,"pa");
 }
 
+void	ft_printlst(t_list *a)
+{
+	while (a)
+	{
+		printf("%d  ::  %d\n",a->n, a->i);
+		a = a->next;
+	}
+}
 int		getmidpos(t_list *a, int i)
 {
 	t_list	*x;
@@ -365,7 +388,7 @@ int		getmidpos(t_list *a, int i)
 
 int get_pos_closestnum(t_lst *a, int mid, int c)
 {
-
+	return 0;
 }
 
 /******************************************/
@@ -374,20 +397,88 @@ int		get_chunk_size(t_list	*a)
 {
 	if (ft_getlistlen(a) <= 50)
 		return (ft_getlistlen(a) / 2 + 1);
+	else if (ft_getlistlen(a) <= 100)
+		return (20);
+	else if (ft_getlistlen(a) <= 170)
+		return (40);
+	else
+		return (45);
 	return 0;
 }
 
+void movetopto_b(t_lst	*data)
+{
+	int mid;
+	int	a;
+	int i;
+
+	a = get_chunk_size(data->a);
+	mid	= getmidpos(data->a, a);
+	i = -1;
+	printf("%d   --\n", mid);
+	while (ft_getlistlen(data->a) >= 2 && ++i < a)
+	{
+		if (data->a->n == mid)
+			ft_exeac(data, "ra");
+		else if (data->a->n < mid)
+			ft_exeac(data, "pa");
+		else
+			ft_exeac(data, "ra");
+	}
+}
+
+void movetopto_a(t_lst	*data)
+{
+	int midpos;
+	char	*str;
+	int		i;
+
+	while (data->b)
+	{
+		i = 0;
+		midpos = ft_getbignbr(data->b)->i;
+		if (midpos == 2)
+			ft_exeac(data, "sb");
+		else
+		{
+			str = find_oper(data->b, &i, midpos, 0);
+			while (i--)
+				ft_exeac(data, str);
+			free (str);
+		}
+		ft_exeac(data, "pb");
+	}
+}
+
+void	ft_freeallst(t_lst *data)
+{
+	int		i;
+	t_list	*tmp;
+
+	i = -1;
+	while (data->a)
+	{
+		tmp = data->a;
+		data->a = data->a->next;
+		free (tmp);
+	}
+	while (data->b)
+	{
+		tmp = data->b;
+		data->b = data->b->next;
+		free (tmp);
+	}
+	while (data->str[++i])
+		free (data->str[i]);
+	free (data->str);
+}
 void sortmored5(t_lst	*data)
 {
-	int big;
-	int	a;
-	int e;
-
-	big	= getmidpos(data->a, get_chunk_size(data->a));
-	while (ft_getlistlen(data->a) >= 2)
-	{
-		
-	}
+	while (ft_getlistlen(data->a) >= 3)
+		movetopto_b(data);
+	if (ft_getlistlen(data->a) == 2)
+		ft_sort2nbr(data);
+	movetopto_a(data);
 }
 
 int		pushswap(char  **ac)
@@ -406,14 +497,11 @@ int		pushswap(char  **ac)
 		ft_sort4nbr(&data);
 	else
 		sortmored5(&data);
-	while (data.a)
-	{
-		printf("%d  ::  %d\n",data.a->n, data.a->i);
-		data.a = data.a->next;
-	}
+	//ft_printlst(data.a);
 	len = 0;
-	while (data.str)
+	while (data.str && data.str[len])
 		printf("%s\n", data.str[len++]);
+	ft_freeallst(&data);
 	return 0;
 }
 
@@ -434,4 +522,5 @@ int main(int av,char **ac)
 	//ft_exeac(&data,"sa");
 	//ft_sort3nbr(&data);
 	pushswap(ac);
+	// while (1);
 }
