@@ -172,7 +172,10 @@ void	ft_push(t_list **a,t_list **b)
 
 void	ft_rrr(t_lst *data)
 {
-	ft_
+	ft_rr(&data->a);
+	ft_rr(&data->b);
+	ft_rinit(data->a);
+	ft_rinit(data->b);
 }
 
 /*************************************************************/
@@ -309,6 +312,8 @@ void	ft_exeac(t_lst *data, char *str)
 		ft_rr(&data->b);
 	else if (!strncmp(str, "pb", 2))
 		ft_push(&data->b, &data->a);
+	else if (!strncmp(str, "rrr", 3))
+		ft_rrr(data);
 	save_act(data, str);
 }
 
@@ -377,22 +382,40 @@ void	ft_printlst(t_list *a)
 }
 int		getmidpos(t_list *a, int i)
 {
-	t_list	*x;
+	double	m;
+	int		max;
+	int 	min;
+	int		mid;
 
-	x = a;
-	while (a && i)
-	{
-		if (x->n < a->n)
-			x = a;
-		a = a->next;
-		i--;
-	}
-	return (x->n);
+	max = ft_getbignbr(a)->n;
+	min = ft_getsmlnbr(a)->n;
+	mid = max - min;
+	m = (double)get_chunk_size(a) / (double)ft_getlistlen(a);
+	max = mid * m;
+	return (min + max);
 }
 
-int get_pos_closestnum(t_lst *a, int mid, int c)
+int get_closestnum(t_lst *data, int c)
 {
-	return 0;
+	int		i;
+	int		j;
+	t_list	*tmp;
+	
+	tmp = data->a;
+	i = ft_lstlast(data->a)->n;
+	j = ft_lstlast(data->a)->i;
+	while (tmp)
+	{
+		if (tmp && c > i && c < tmp->n)
+		{
+			if (tmp->i != 1)
+				j = tmp->i;
+			return (j);
+		}
+		i = tmp->n;
+		tmp = tmp->next;
+	}
+	return (1);
 }
 
 /******************************************/
@@ -418,15 +441,17 @@ void movetopto_b(t_lst	*data)
 
 	a = get_chunk_size(data->a);
 	mid	= getmidpos(data->a, a);
+	//ft_printlst(data->a);
+	//printf("%d   \n", mid);
 	i = -1;
-	while (ft_getlistlen(data->a) >= 2 && ++i < a)
+	while (ft_getsmlnbr(data->a)->n < mid )
 	{
 		if (data->a->n == mid)
 			ft_exeac(data, "ra");
 		else if (data->a->n < mid)
 			ft_exeac(data, "pa");
 		else
-			ft_exeac(data, "ra");
+			ft_exeac(data, "ra");;
 	}
 }
 
@@ -435,7 +460,11 @@ void movetopto_a(t_lst	*data)
 	int midpos;
 	char	*str;
 	int		i;
+	int 	j;
 
+	j = get_closestnum(data, data->b->n);
+	str = find_oper(data->b, &i, midpos, 0);
+	ft_exeac(data, "pb");
 	while (data->b)
 	{
 		i = 0;
@@ -444,10 +473,16 @@ void movetopto_a(t_lst	*data)
 			ft_exeac(data, "sb");
 		else
 		{
-			str = find_oper(data->b, &i, midpos, 0);
+			j = get_closestnum(data, data->b->n);
+			str = find_oper(data->a, &i, j, 1);
+			printf("%d  **  %d \n", j, data->b->n);
+			ft_printlst(data->a);
+			/*str = find_oper(data->b, &i, midpos, 0);
+			printf("%d  **\n", i);*/
 			while (i--)
 				ft_exeac(data, str);
 			free (str);
+			printf("\n");
 		}
 		ft_exeac(data, "pb");
 	}
@@ -477,10 +512,12 @@ void	ft_freeallst(t_lst *data)
 }
 void sortmored5(t_lst	*data)
 {
-	while (ft_getlistlen(data->a) >= 3)
+	while (ft_getlistlen(data->a) >= 4)
 		movetopto_b(data);
-	if (ft_getlistlen(data->a) == 2)
-		ft_sort2nbr(data);
+	if (ft_getlistlen(data->a) == 3)
+		ft_sort3nbr(data);
+	//ft_printlst(data->a);
+	//ft_printlst(data->b);
 	movetopto_a(data);
 }
 
@@ -500,10 +537,10 @@ int		pushswap(char  **ac)
 		ft_sort4nbr(&data);
 	else
 		sortmored5(&data);
-	//ft_printlst(data.a);
+	ft_printlst(data.a);
 	len = 0;
-	while (data.str && data.str[len])
-		printf("%s\n", data.str[len++]);
+	/*while (data.str && data.str[len])
+		printf("%s\n", data.str[len++]);*/
 	ft_freeallst(&data);
 	return 0;
 }
