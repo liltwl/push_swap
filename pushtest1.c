@@ -288,13 +288,13 @@ void	save_act(t_lst *data, char *str)
 
 	len = 0;
 	data->str = ft_realloc(data->str);
-	while (data->str[len])
+	while (data->str[len] != NULL)
 		len++;
 	data->str[len] = strdup(str);
 	data->str[len + 1] = NULL;
 }
 
-void	ft_exeac(t_lst *data, char *str)
+void	ft_exeac(t_lst *data, char *str, int i)
 {
 	if (!strncmp(str, "sa", 2))
 		ft_swap(&data->a);
@@ -314,7 +314,8 @@ void	ft_exeac(t_lst *data, char *str)
 		ft_push(&data->b, &data->a);
 	else if (!strncmp(str, "rrr", 3))
 		ft_rrr(data);
-	save_act(data, str);
+	if (i == 1)
+		save_act(data, str);
 }
 
 void ft_sort2nbr(t_lst *data)
@@ -325,7 +326,7 @@ void ft_sort2nbr(t_lst *data)
 	top = ft_getibn(1, data->a);
 	mid = ft_getibn(2, data->a);
 	if (top >= mid)
-		ft_exeac(data,"sa");
+		ft_exeac(data,"sa", 1);
 }
 
 void ft_sort3nbr(t_lst *data)
@@ -338,21 +339,21 @@ void ft_sort3nbr(t_lst *data)
 	mid = ft_getibn(2, data->a);
 	bot = ft_getibn(3, data->a);
 	if (top > mid && top < bot)
-		ft_exeac(data,"sa");
+		ft_exeac(data,"sa", 1);
 	else if(top < mid && top < bot && bot < mid)
 	{
-		ft_exeac(data,"sa");
-		ft_exeac(data,"ra");
+		ft_exeac(data,"sa", 1);
+		ft_exeac(data,"ra", 1);
 	}
 	else if (top > mid && mid < bot && top > bot)
-		ft_exeac(data,"ra");
+		ft_exeac(data,"ra", 1);
 	else if(top > mid && top > bot)
 	{
-		ft_exeac(data,"sa");
-		ft_exeac(data,"rra");
+		ft_exeac(data,"sa", 1);
+		ft_exeac(data,"rra", 1);
 	}
 	else if(top < mid && top > bot)
-		ft_exeac(data,"rra");
+		ft_exeac(data,"rra", 1);
 }
 
 void	ft_sort4nbr(t_lst	*data)
@@ -364,12 +365,11 @@ void	ft_sort4nbr(t_lst	*data)
 	minpos = ft_getsmlnbr(data->a)->i;
 	str = find_oper(data->a, &i, minpos, 1);
 	while (i--)
-		ft_exeac(data, str);
+		ft_exeac(data, str, 1);
 	free (str);
-	free(str);
-	ft_exeac(data, "pa");
+	ft_exeac(data, "pa", 1);
 	ft_sort3nbr(data);
-	ft_exeac(data, "pb");
+	ft_exeac(data, "pb", 1);
 }
 
 void	ft_printlst(t_list *a)
@@ -447,11 +447,11 @@ void movetopto_b(t_lst	*data)
 	while (ft_getsmlnbr(data->a)->n < mid )
 	{
 		if (data->a->n == mid)
-			ft_exeac(data, "ra");
+			ft_exeac(data, "ra", 1);
 		else if (data->a->n < mid)
-			ft_exeac(data, "pa");
+			ft_exeac(data, "pa", 1);
 		else
-			ft_exeac(data, "ra");;
+			ft_exeac(data, "ra", 1);
 	}
 }
 
@@ -463,28 +463,26 @@ void movetopto_a(t_lst	*data)
 	int 	j;
 
 	j = get_closestnum(data, data->b->n);
-	str = find_oper(data->b, &i, midpos, 0);
-	ft_exeac(data, "pb");
+	str = find_oper(data->a, &i, midpos, 1);
+	//ft_exeac(data, "pb");
 	while (data->b)
 	{
 		i = 0;
 		midpos = ft_getbignbr(data->b)->i;
 		if (midpos == 2)
-			ft_exeac(data, "sb");
-		else
+			ft_exeac(data, "sb", 1);
+		else if (midpos > 2)
 		{
-			j = get_closestnum(data, data->b->n);
-			str = find_oper(data->a, &i, j, 1);
-			printf("%d  **  %d \n", j, data->b->n);
-			ft_printlst(data->a);
-			/*str = find_oper(data->b, &i, midpos, 0);
-			printf("%d  **\n", i);*/
+			//printf("%d  **  %d \n", j, data->b->n);
+			//ft_printlst(data->a);
+			str = find_oper(data->b, &i, midpos, 0);
+			//printf("%d  **\n", i);
 			while (i--)
-				ft_exeac(data, str);
+				ft_exeac(data, str, 1);
 			free (str);
-			printf("\n");
+			//printf("\n");
 		}
-		ft_exeac(data, "pb");
+		ft_exeac(data, "pb", 1);
 	}
 }
 
@@ -512,13 +510,57 @@ void	ft_freeallst(t_lst *data)
 }
 void sortmored5(t_lst	*data)
 {
-	while (ft_getlistlen(data->a) >= 4)
+	while (ft_getlistlen(data->a) > 4)
 		movetopto_b(data);
-	if (ft_getlistlen(data->a) == 3)
+	//ft_printlst(data->a);
+	if (ft_getlistlen(data->a) == 4)
+		ft_sort4nbr(data);
+	else if (ft_getlistlen(data->a) == 3)
 		ft_sort3nbr(data);
 	//ft_printlst(data->a);
 	//ft_printlst(data->b);
 	movetopto_a(data);
+}
+
+int	ft_issorted(t_list *a)
+{
+	int		n;
+
+	n = a->n;
+	a = a->next;
+	while (a)
+	{
+		printf("%d  **  %d\n", n, a->n);
+		if (n > a->n)
+			return (0);
+		n = a->n;
+		a = a->next;
+	}
+	return (1);
+}
+
+
+int		ft_cheker(t_lst	*data, char **ac)
+{
+	int		i;
+	t_lst	data1;
+
+	i = -1;
+	data1.a = NULL;
+	data1.b = NULL;
+	if (ft_list(&data1.a , ac) < 0)
+	{
+		perror("error :");
+		exit(0);
+	}
+	while (data->str && data->str[++i])
+	{
+		//printf("--%s\n", data->str[i]);
+		ft_exeac(&data1, data->str[i], 0);
+	}
+	printf("--%d\n", ft_issorted(data->a));
+	ft_printlst(data1.a);
+	return 0;
 }
 
 int		pushswap(char  **ac)
@@ -529,7 +571,10 @@ int		pushswap(char  **ac)
 	data.b = NULL;
 	data.str = NULL;
 	if (ft_list(&data.a, ac) < 0)
+	{
 		perror("error :");
+		exit(0);
+	}
 	len = ft_getlistlen(data.a);
 	if (len == 3)
 		ft_sort3nbr(&data);
@@ -537,25 +582,33 @@ int		pushswap(char  **ac)
 		ft_sort4nbr(&data);
 	else
 		sortmored5(&data);
-	ft_printlst(data.a);
-	len = 0;
-	/*while (data.str && data.str[len])
-		printf("%s\n", data.str[len++]);*/
+	//ft_printlst(data.a);
+	len = -1;
+	while (data.str && data.str[++len])
+	{
+		write(1,data.str[len], strlen(data.str[len]));
+		write(1, "\n", 1);
+	}
+	ft_cheker(&data, ac);
 	ft_freeallst(&data);
 	return 0;
 }
+
 
 int main(int av,char **ac)
 {
     int i;
     int j;
 	char **p;
-    t_list  *data;
+    t_list  data;
 
     if (av < 2)
         return 1;
-    /*if (ft_list(&data, ac) < 0)
-		printf("error\n");*/
+    /*if (ft_list(&data.a, ac) < 0)
+	{
+		perror("error :");
+		exit(0);
+	}*/
 	//ft_swap(&data);
 	//ft_rr(&data);
 	//ft_rotate(&data);
